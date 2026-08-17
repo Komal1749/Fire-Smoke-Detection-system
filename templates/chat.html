@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Chatbot | Fire & Smoke </title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+
+        .chat-page {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .chat-card {
+            width: min(850px, 100%);
+            padding: 35px;
+            border-radius: 25px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 70px rgba(0,0,0,0.35);
+        }
+
+        .chat-title {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .chat-subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 30px;
+        }
+
+        /* =========================
+           QUESTION
+        ========================= */
+
+        .question-box {
+            width: 100%;
+            min-height: 110px;
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.2);
+            color: white;
+            font-size: 16px;
+            resize: vertical;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .question-box:focus {
+            border-color: #ff7548;
+            box-shadow: 0 0 15px rgba(255,100,60,0.15);
+        }
+
+        /* =========================
+           BUTTONS
+        ========================= */
+
+        .chat-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .ask-btn,
+        .control-btn {
+            padding: 12px 22px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            color: white;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .ask-btn {
+            background: linear-gradient(
+                135deg,
+                #ff4d35,
+                #ff9a44
+            );
+        }
+
+        .control-btn {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .ask-btn:hover,
+        .control-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* =========================
+           ANSWER
+        ========================= */
+
+        .answer-box {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .answer-box h3 {
+            margin-bottom: 12px;
+        }
+
+        .question-display {
+            color: rgba(255,255,255,0.75);
+        }
+
+        .answer-text {
+            white-space: pre-wrap;
+            line-height: 1.7;
+            color: rgba(255,255,255,0.88);
+        }
+
+        /* =========================
+           STATUS
+        ========================= */
+
+        .status {
+            margin-top: 15px;
+            color: rgba(255,255,255,0.55);
+            font-size: 13px;
+        }
+
+        /* =========================
+           BACK
+        ========================= */
+
+        .back-section {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            padding: 12px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            color: white;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            transition: 0.3s;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.14);
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media(max-width:600px) {
+
+            .chat-card {
+                padding: 25px 18px;
+            }
+
+            .chat-buttons {
+                flex-direction: column;
+            }
+
+            .ask-btn,
+            .control-btn {
+                width: 100%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- BACKGROUND -->
+
+<div class="background-animation">
+
+    <div class="bubble bubble1"></div>
+    <div class="bubble bubble2"></div>
+    <div class="bubble bubble3"></div>
+    <div class="bubble bubble4"></div>
+    <div class="bubble bubble5"></div>
+    <div class="bubble bubble6"></div>
+
+</div>
+
+
+<main class="chat-page">
+
+    <div class="chat-card">
+
+
+        <!-- TITLE -->
+
+        <h1 class="chat-title">
+          Fire & Smoke  Chatbot
+        </h1>
+
+        <p class="chat-subtitle">
+            Powered by Groq AI — Ask questions about AI, ML,
+            DL, CNN, MobileNetV2, Fire & Smoke Detection
+            or general topics.
+        </p>
+
+
+        <!-- QUESTION FORM -->
+
+        <form action="/chat" method="POST">
+
+            <textarea
+                name="question"
+                id="questionBox"
+                class="question-box"
+                placeholder="Ask your question..."
+                required>{{ question if question else "" }}</textarea>
+
+
+            <!-- BUTTONS -->
+
+            <div class="chat-buttons">
+
+                <button
+                    type="submit"
+                    class="ask-btn">
+
+                    🚀 Ask 
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="control-btn"
+                    onclick="copyAnswer()">
+
+                    📋 Copy Answer
+
+                </button>
+
+
+                <button
+                    type="button"
+                    class="control-btn"
+                    onclick="refreshChat()">
+
+                    🔄 Refresh
+
+                </button>
+
+            </div>
+
+        </form>
+
+
+        <!-- STATUS -->
+
+        <div class="status" id="statusMessage">
+
+            🟢 Groq  Assistant Ready
+
+        </div>
+
+
+        <!-- ANSWER -->
+
+        {% if question %}
+
+        <div class="answer-box" id="answerBox">
+
+
+            <h3>
+                ❓ Your Question
+            </h3>
+
+            <p class="question-display">
+                {{ question }}
+            </p>
+
+
+            <br>
+
+
+            <h3>
+                 Answer
+            </h3>
+
+
+            <div
+                id="answerText"
+                class="answer-text">
+
+                {{ answer }}
+
+            </div>
+
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- BACK -->
+
+        <div class="back-section">
+
+            <a href="/" class="back-btn">
+                ⬅️ Back to Home
+            </a>
+
+        </div>
+
+
+    </div>
+
+</main>
+
+
+<script>
+
+/* =====================================================
+   COPY ANSWER
+===================================================== */
+
+function copyAnswer() {
+
+    const answerElement =
+        document.getElementById("answerText");
+
+    if (!answerElement) {
+
+        alert("❌ No answer available to copy.");
+
+        return;
+
+    }
+
+    const text =
+        answerElement.innerText;
+
+    navigator.clipboard.writeText(text)
+        .then(function () {
+
+            const status =
+                document.getElementById(
+                    "statusMessage"
+                );
+
+            status.innerText =
+                "✅ Answer copied successfully!";
+
+        })
+        .catch(function () {
+
+            alert("❌ Unable to copy answer.");
+
+        });
+
+}
+
+
+/* =====================================================
+   REFRESH / NEW CHAT
+===================================================== */
+
+function refreshChat() {
+
+    /*
+       Clear question
+    */
+
+    const question =
+        document.getElementById(
+            "questionBox"
+        );
+
+    if (question) {
+
+        question.value = "";
+
+    }
+
+
+    /*
+       Remove previous answer
+    */
+
+    const answer =
+        document.getElementById(
+            "answerBox"
+        );
+
+    if (answer) {
+
+        answer.remove();
+
+    }
+
+
+    /*
+       Reset status
+    */
+
+    const status =
+        document.getElementById(
+            "statusMessage"
+        );
+
+    if (status) {
+
+        status.innerText =
+            "🟢 New chat started — Ask your question.";
+
+    }
+
+
+    /*
+       Focus textarea
+    */
+
+    if (question) {
+
+        question.focus();
+
+    }
+
+}
+
+
+/* =====================================================
+   CTRL + ENTER
+===================================================== */
+
+document
+    .getElementById("questionBox")
+    .addEventListener(
+        "keydown",
+        function(event) {
+
+            if (
+                event.ctrlKey &&
+                event.key === "Enter"
+            ) {
+
+                this.form.submit();
+
+            }
+
+        }
+    );
+
+</script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,17 @@
+﻿venv/
+.env
+__pycache__/
+*.pyc
+
+uploads/*
+!uploads/.gitkeep
+
+.ipynb_checkpoints/
+
+*.keras
+*.h5
+*.pt
+*.pth
+
+.DS_Store
+dataset/
