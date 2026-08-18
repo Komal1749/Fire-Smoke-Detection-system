@@ -8,10 +8,9 @@ uploads/*
 
 .ipynb_checkpoints/
 
-*.keras
+
 *.h5
 *.pt
 *.pth
 
-.DS_Store
 dataset/
