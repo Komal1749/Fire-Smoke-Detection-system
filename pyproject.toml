@@ -1,0 +1,2 @@
+[tool.render]
+python_version = "3.12.10"
