@@ -18,7 +18,7 @@ client = Groq(api_key=api_key)
 def ask_groq(question):
 
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model="llama-3.3-70b-versatile"
         messages=[
             {
                 "role": "system",
