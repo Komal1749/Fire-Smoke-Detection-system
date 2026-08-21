@@ -1,3 +1,4 @@
+import os
 import tensorflow as tf
 import numpy as np
 
@@ -9,156 +10,116 @@ from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 # FIRE & SMOKE DETECTION - MOBILENETV2
 # ============================================================
 
+MODEL_PATH = os.path.join(
+    os.path.dirname(__file__),
+    "model",
+    "fire_smoke_mobilenetv2.keras"
+)
 
-# ============================================================
-# MODEL PATH
-# ============================================================
+IMAGE_SIZE = (224, 224)
 
-MODEL_PATH = "model/fire_smoke_mobilenetv2.keras"
-
-
-# ============================================================
-# LOAD TRAINED MODEL
-# ============================================================
-
-try:
-
-    model = tf.keras.models.load_model(MODEL_PATH)
-
-    print("======================================")
-    print("MobileNetV2 Model Loaded Successfully")
-    print("======================================")
-
-except Exception as e:
-
-    print("❌ Error loading model:")
-    print(e)
-
-    model = None
+# Model is loaded only when prediction is actually requested
+model = None
 
 
 # ============================================================
-# CLASS NAMES
-# IMPORTANT:
-# These must match train_data.class_indices
+# LOAD MODEL
 # ============================================================
 
-classes = [
-    "Smoke",
-    "fire",
-    "nonfire"
-]
+def get_model():
 
+    global model
 
-# ============================================================
-# IMAGE SIZE
-# ============================================================
-
-IMG_SIZE = (128, 128)
-
-
-# ============================================================
-# MODEL INFORMATION
-# ============================================================
-
-MODEL_NAME = "MobileNetV2"
-TEST_ACCURACY = 83.91
-
-
-# ============================================================
-# IMAGE PREDICTION FUNCTION
-# ============================================================
-
-def predict_image(img_path):
-
-    # Check model
     if model is None:
-        raise RuntimeError("Model could not be loaded.")
 
-    # --------------------------------------------------------
+        print("======================================")
+        print("Loading MobileNetV2 model...")
+        print("======================================")
+
+        model = tf.keras.models.load_model(
+            MODEL_PATH,
+            compile=False
+        )
+
+        print("======================================")
+        print("MobileNetV2 Model Loaded Successfully")
+        print("======================================")
+
+    return model
+
+
+# ============================================================
+# PREDICT IMAGE
+# ============================================================
+
+def predict_image(image_path):
+
+    loaded_model = get_model()
+
     # Load image
-    # --------------------------------------------------------
-
     img = image.load_img(
-        img_path,
-        target_size=IMG_SIZE
+        image_path,
+        target_size=IMAGE_SIZE
     )
 
-    # --------------------------------------------------------
-    # Convert image to NumPy array
-    # --------------------------------------------------------
+    # Convert image to array
+    img_array = image.img_to_array(img)
 
-    img = image.img_to_array(img)
-
-    # --------------------------------------------------------
     # Add batch dimension
-    # Shape:
-    # (128,128,3)
-    #        ↓
-    # (1,128,128,3)
-    # --------------------------------------------------------
+    img_array = np.expand_dims(
+        img_array,
+        axis=0
+    )
 
-    img = np.expand_dims(img, axis=0)
-
-    # --------------------------------------------------------
     # MobileNetV2 preprocessing
-    # --------------------------------------------------------
+    img_array = preprocess_input(
+        img_array
+    )
 
-    img = preprocess_input(img)
-
-    # --------------------------------------------------------
     # Prediction
-    # --------------------------------------------------------
-
-    prediction = model.predict(
-        img,
+    prediction = loaded_model.predict(
+        img_array,
         verbose=0
     )
 
-    # --------------------------------------------------------
-    # Get prediction probabilities
-    # --------------------------------------------------------
+    # ========================================================
+    # CLASS HANDLING
+    # ========================================================
 
-    probabilities = prediction[0]
+    # If model has 3 output classes
+    if prediction.shape[-1] == 3:
 
-    # --------------------------------------------------------
-    # Get predicted class index
-    # --------------------------------------------------------
+        class_index = int(
+            np.argmax(prediction[0])
+        )
 
-    class_index = np.argmax(probabilities)
+        confidence = float(
+            prediction[0][class_index]
+        )
 
-    # --------------------------------------------------------
-    # Get class name
-    # --------------------------------------------------------
+        classes = [
+            "Smoke",
+            "fire",
+            "nonfire"
+        ]
 
-    predicted_class = classes[class_index]
+        predicted_class = classes[class_index]
 
-    # --------------------------------------------------------
-    # Get confidence
-    # --------------------------------------------------------
+    # If model has 2 output classes
+    else:
 
-    confidence = float(
-        probabilities[class_index]
-    )
+        probability = float(
+            prediction[0][0]
+        )
 
-    # --------------------------------------------------------
-    # Return result
-    # --------------------------------------------------------
+        if probability >= 0.5:
+
+            predicted_class = "fire"
+            confidence = probability
+
+        else:
+
+            predicted_class = "nonfire"
+            confidence = 1 - probability
 
     return predicted_class, confidence
-
-
-# ============================================================
-# OPTIONAL TEST
-# Run this file directly to test one image
-# ============================================================
-
-if __name__ == "__main__":
-
-    print()
-    print("======================================")
-    print("Fire & Smoke Detection AI")
-    print("Model:", MODEL_NAME)
-    print("Test Accuracy:", TEST_ACCURACY, "%")
-    print("Classes:", classes)
-    print("======================================")
