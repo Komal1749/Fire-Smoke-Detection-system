@@ -16,7 +16,7 @@ MODEL_PATH = os.path.join(
     "fire_smoke_mobilenetv2.keras"
 )
 
-IMAGE_SIZE = (224, 224)
+IMAGE_SIZE = (128, 128)
 
 # Model is loaded only when prediction is actually requested
 model = None
